@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Instances</title>
+</head>
+<header th:replace="header :: appHeader"></header>
+<body>
+<h2>Экземпляры процессов</h2>
+
+<div th:if="${errorMessage != null}" style="color: #b00020; margin: 8px 0;">
+    <span th:text="${errorMessage}"></span>
+</div>
+
+<form id="instancesFilterForm" th:action="@{/qbpmcockpit/instances}" method="get">
+    <div>
+        <label for="processName">processName:</label>
+        <input id="processName" name="processName" type="text" th:value="${processName}" />
+    </div>
+    <div>
+        <label for="state">state:</label>
+        <input id="state" name="state" type="text" th:value="${state}" />
+    </div>
+    <div>
+        <label for="serviceName">serviceName:</label>
+        <input id="serviceName" name="serviceName" type="text" th:value="${serviceName}" />
+    </div>
+    <div>
+        <label for="userLogin">userLogin:</label>
+        <input id="userLogin" name="userLogin" type="text" th:value="${userLogin}" />
+    </div>
+    <div>
+        <label for="lastStartDate">lastStartDate:</label>
+        <input id="lastStartDate" name="lastStartDate" type="text" th:value="${lastStartDate}" placeholder="YYYY-MM-DD" />
+    </div>
+    <div>
+        <label for="lastEndDate">lastEndDate:</label>
+        <input id="lastEndDate" name="lastEndDate" type="text" th:value="${lastEndDate}" placeholder="YYYY-MM-DD" />
+    </div>
+    <div>
+        <label for="businessKey">businessKey:</label>
+        <input id="businessKey" name="businessKey" type="text" th:value="${businessKey}" />
+    </div>
+    <div>
+        <label for="isRoot">isRoot:</label>
+        <select id="isRoot" name="isRoot">
+            <option value="" th:selected="${isRoot == null}">any</option>
+            <option value="true" th:selected="${isRoot != null and isRoot}">true</option>
+            <option value="false" th:selected="${isRoot != null and !isRoot}">false</option>
+        </select>
+    </div>
+    <div>
+        <label for="withOpenIncidents">withOpenIncidents:</label>
+        <select id="withOpenIncidents" name="withOpenIncidents">
+            <option value="" th:selected="${withOpenIncidents == null}">any</option>
+            <option value="true" th:selected="${withOpenIncidents != null and withOpenIncidents}">true</option>
+            <option value="false" th:selected="${withOpenIncidents != null and !withOpenIncidents}">false</option>
+        </select>
+    </div>
+    <div>
+        <label for="tenantId">tenantId:</label>
+        <input id="tenantId" name="tenantId" type="text" th:value="${tenantId}" />
+    </div>
+    <div>
+        <label for="sort">sort:</label>
+        <input id="sort" name="sort" type="text" th:value="${sort}" placeholder="startTime,desc" />
+    </div>
+
+    <div>
+        <label for="size">size:</label>
+        <select id="size" name="size">
+            <option value="10" th:selected="${size == 10}">10</option>
+            <option value="20" th:selected="${size == 20}">20</option>
+            <option value="50" th:selected="${size == 50}">50</option>
+            <option value="100" th:selected="${size == 100}">100</option>
+        </select>
+    </div>
+
+    <input id="pageInput" type="hidden" name="page" th:value="${page}" />
+
+    <div>
+        <button type="submit">Search</button>
+    </div>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('instancesFilterForm');
+        if (!form) {
+            return;
+        }
+
+        function setPageAndSubmit(page) {
+            var pageInput = document.getElementById('pageInput');
+            if (pageInput) {
+                pageInput.value = String(page);
+            }
+            if (typeof form.requestSubmit === 'function') {
+                form.requestSubmit();
+            } else {
+                form.submit();
+            }
+        }
+
+        var pagerButtons = document.querySelectorAll('[data-page]');
+        for (let pagerButton of pagerButtons) {
+            pagerButton.addEventListener('click', function (e) {
+                e.preventDefault();
+                var pageAttr = this.getAttribute('data-page');
+                if (pageAttr === null || pageAttr === undefined) {
+                    return;
+                }
+                var p = Number.parseInt(pageAttr, 10);
+                if (!Number.isNaN(p)) {
+                    setPageAndSubmit(p);
+                }
+            });
+        }
+
+        form.addEventListener('submit', function () {
+            var elements = form.querySelectorAll('input[name], select[name], textarea[name]');
+            for (const element of elements) {
+                var el = element;
+                if (el.name === 'page' || el.name === 'size') {
+                    continue;
+                }
+                var value = (el.value || '').trim();
+                if (value === '') {
+                    el.disabled = true;
+                }
+            }
+        });
+
+        function getRowCheckboxes() {
+            return document.querySelectorAll('input.instance-select[type="checkbox"]');
+        }
+
+        function updateFinishButtonState() {
+            var btn = document.getElementById('finishBtn');
+            if (!btn) {
+                return;
+            }
+            var boxes = getRowCheckboxes();
+            var anyChecked = false;
+            for (const b of boxes) {
+                if (b.checked) {
+                    anyChecked = true;
+                    break;
+                }
+            }
+            btn.disabled = !anyChecked;
+        }
+
+        function updateSelectAllButtonLabel() {
+            var btn = document.getElementById('selectAllBtn');
+            if (!btn) {
+                return;
+            }
+            var boxes = getRowCheckboxes();
+            if (!boxes || boxes.length === 0) {
+                btn.textContent = 'Выбрать все';
+                return;
+            }
+            var allChecked = true;
+            for (const b of boxes) {
+                if (!b.checked) {
+                    allChecked = false;
+                    break;
+                }
+            }
+            btn.textContent = allChecked ? 'Снять выбор' : 'Выбрать все';
+        }
+
+        var selectAllBtn = document.getElementById('selectAllBtn');
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                var boxes = getRowCheckboxes();
+                if (!boxes || boxes.length === 0) {
+                    return;
+                }
+                var shouldCheck = false;
+                for (const b of boxes) {
+                    if (!b.checked) {
+                        shouldCheck = true;
+                        break;
+                    }
+                }
+                for (const b2 of boxes) {
+                    b2.checked = shouldCheck;
+                }
+                updateSelectAllButtonLabel();
+                updateFinishButtonState();
+            });
+        }
+
+        var rowBoxes = getRowCheckboxes();
+        for (const rb of rowBoxes) {
+            rb.addEventListener('change', function () {
+                updateSelectAllButtonLabel();
+                updateFinishButtonState();
+            });
+        }
+
+        var finishForm = document.getElementById('finishForm');
+        if (finishForm) {
+            finishForm.addEventListener('submit', function (e) {
+                var existing = finishForm.querySelectorAll('input[name="id"]');
+                for (const ex of existing) {
+                    ex.remove();
+                }
+
+                var boxes = getRowCheckboxes();
+                var selected = [];
+                for (const b of boxes) {
+                    if (b.checked) {
+                        var id = b.getAttribute('data-id');
+                        if (id) {
+                            selected.push(id);
+                        }
+                    }
+                }
+
+                if (selected.length === 0) {
+                    e.preventDefault();
+                    updateFinishButtonState();
+                    return;
+                }
+
+                for (const idValue of selected) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'id';
+                    input.value = idValue;
+                    finishForm.appendChild(input);
+                }
+            });
+        }
+
+        updateSelectAllButtonLabel();
+        updateFinishButtonState();
+    });
+</script>
+
+<div th:if="${result != null}">
+    <div>
+        <span th:text="'totalElements: ' + ${result.totalElements}"></span>
+        <span th:text="' | page: ' + ${result.number} + ' / ' + ${result.totalPages}"></span>
+        <span th:text="' | size: ' + ${result.size}"></span>
+    </div>
+
+    <div>
+        <button id="selectAllBtn" type="button">Выбрать все</button>
+    </div>
+
+    <form id="finishForm" th:action="@{/qbpmcockpit/instances/finish}" method="post">
+        <button id="finishBtn" type="submit" disabled>Завершить процессы</button>
+    </form>
+
+    <div>
+        <button type="button" th:if="${result.hasPrevious()}" th:attr="data-page=${result.number - 1}">Prev</button>
+
+        <span th:each="p : ${pageNumbers}">
+            <button type="button"
+                    th:attr="data-page=${p}"
+                    th:text="${p}"
+                    th:style="${p} == ${result.number} ? 'font-weight:bold' : ''"></button>
+            <span> </span>
+        </span>
+
+        <button type="button" th:if="${result.hasNext()}" th:attr="data-page=${result.number + 1}">Next</button>
+    </div>
+
+    <table border="1" cellpadding="4" cellspacing="0">
+        <thead>
+        <tr>
+            <th></th>
+            <th>№</th>
+            <th>id</th>
+            <th>processName</th>
+            <th>state</th>
+            <th>serviceName</th>
+            <th>userLogin</th>
+            <th>businessKey</th>
+            <th>startTime</th>
+            <th>endTime</th>
+            <th>duration</th>
+            <th>tenantId</th>
+            <th>withOpenIncidents</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row, rowStat : ${result.content}">
+            <td>
+                <input class="instance-select" type="checkbox" th:attr="data-id=${row.id}" />
+            </td>
+            <td th:text="${(result.number * result.size) + rowStat.index + 1}"></td>
+            <td th:text="${row.id}"></td>
+            <td th:text="${row.processName}"></td>
+            <td th:text="${row.state}"></td>
+            <td th:text="${row.serviceName}"></td>
+            <td th:text="${row.userLogin}"></td>
+            <td th:text="${row.businessKey}"></td>
+            <td th:text="${row.startTime}"></td>
+            <td th:text="${row.endTime}"></td>
+            <td th:text="${row.duration}"></td>
+            <td th:text="${row.tenantId}"></td>
+            <td th:text="${row.withOpenIncidents}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

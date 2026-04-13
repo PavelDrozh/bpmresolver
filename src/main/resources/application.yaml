@@ -1,0 +1,81 @@
+server:
+  port: ${SERVICE_PORT:7085}
+  shutdown: graceful
+spring:
+  application:
+    locale: ru-RU #en-US
+    name: bpmresolver
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    contexts: ${SPRING_LIQUIBASE_CONTEXTS:dev}
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+    circuitbreaker:
+      resilience4j:
+        disable-time-limiter: true
+        disable-thread-pool: true
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres?currentSchema=bpmresolver}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: never
+  jpa:
+    hibernate:
+      ddl-auto: none
+  data:
+    rest:
+      basePath: /datarest
+app:
+  qbpmcockpit:
+    base-url: ${APP_QBPMCOCKPIT_BASE_URL:https://qbpmcockpit.qtms.qrun.diasoft.ru}
+    context: ${APP_QBPMCOCKPIT_CONTEXT:qbpmcockpit}
+    token: ${APP_QBPMCOCKPIT_TOKEN:}
+  qbpmplayer:
+    base-url: ${APP_QBPMPLAYER_BASE_URL:http://qesevaluationsbpm.qtms.qrun.diasoft.ru}
+    context: ${APP_QBPMPLAYER_CONTEXT:qesevaluationsbpm}
+  auth:
+    access:
+      url: ${APP_AUTH_ACCESS_URL:https://login.diasoft.ru/auth/realms/hcm/protocol/openid-connect/token}
+      realm: ${APP_AUTH_ACCESS_REALM:hcm}
+      client-id: ${APP_AUTH_ACCESS_CLIENT_ID:hcm-test}
+      user-name: ${APP_AUTH_ACCESS_USER_NAME:dqtest}
+
+jwt:
+  issuer: bpmresolver
+  access-ttl-seconds: 600
+  public-key-location: classpath:keys/app.pub
+  private-key-location: classpath:keys/app.key
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+  health:
+    defaults:
+      enabled: true
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: FULL
+        connectTimeout: 10000
+        readTimeout: 10000
+resilience4j:
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 20s
+        cancel-running-future: true

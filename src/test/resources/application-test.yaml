@@ -1,0 +1,21 @@
+spring:
+  test:
+    context:
+      failure:
+        threshold: 0
+  datasource:
+    url: jdbc:h2:mem:bpmresolver-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  sql:
+    init:
+      mode: never
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-test.yaml
+    contexts: ${SPRING_LIQUIBASE_CONTEXTS:dev}
+
+  jpa:
+    hibernate:
+      ddl-auto: none

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<header th:replace="header :: appHeader"></header>
+<body>
+<h2>Авторизация</h2>
+
+<form th:action="@{/auth/login}" method="post">
+    <input type="hidden" id="redirect" name="redirect" th:value="${redirect}" />
+
+    <div>
+        <label for="username">Логин:</label>
+        <input id="username" name="username" type="text" autocomplete="username" required />
+    </div>
+
+    <div>
+        <label for="password">Пароль:</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+    </div>
+
+    <div>
+        <button type="submit">Войти</button>
+    </div>
+</form>
+
+<div>
+    <a th:href="@{/register}">Зарегистрироваться</a>
+</div>
+
+<div id="error" style="color: red;" th:if="${param.error}">Неверный логин или пароль</div>
+</body>
+</html>

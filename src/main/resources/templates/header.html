@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>HEADER</title>
+</head>
+<body>
+<header th:fragment="appHeader">
+    <div class="topbar">
+        <a th:href="@{/}">
+            <img th:src="@{/images/Logo.jpg}" alt="Logo" style="height: 64px; width: auto; vertical-align: middle;" />
+        </a>
+        <a th:href="@{/}">Главная</a>
+        <a th:href="@{/login}">Авторизация</a>
+        <a th:href="@{/token}">Токен</a>
+        <a th:href="@{/qbpmcockpit/baseUrl}">Базовый URL БПМ</a>
+        <a th:href="@{/qbpmcockpit/instances}">Поиск запущенных процессов</a>
+        <a th:href="@{/finished-processes/deleted}">Удалённые процессы</a>
+    </div>
+</header>
+</body>
+</html>
