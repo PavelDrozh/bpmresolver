@@ -79,7 +79,7 @@
     <input id="pageInput" type="hidden" name="page" th:value="${page}" />
 
     <div>
-        <button type="submit">Search</button>
+        <button type="submit">Поиск</button>
     </div>
 </form>
 
@@ -244,9 +244,9 @@
 
 <div th:if="${result != null}">
     <div>
-        <span th:text="'totalElements: ' + ${result.totalElements}"></span>
-        <span th:text="' | page: ' + ${result.number} + ' / ' + ${result.totalPages}"></span>
-        <span th:text="' | size: ' + ${result.size}"></span>
+        <span th:text="'Всего: ' + ${result.totalElements}"></span>
+        <span th:text="' | Страница: ' + ${result.number} + ' / ' + ${result.totalPages}"></span>
+        <span th:text="' | Эл-ов на странице: ' + ${result.size}"></span>
     </div>
 
     <div>
@@ -268,7 +268,7 @@
             <span> </span>
         </span>
 
-        <button type="button" th:if="${result.hasNext()}" th:attr="data-page=${result.number + 1}">Next</button>
+        <button type="button" th:if="${result.hasNext()}" th:attr="data-page=${result.number + 1}">Далее</button>
     </div>
 
     <table border="1" cellpadding="4" cellspacing="0">

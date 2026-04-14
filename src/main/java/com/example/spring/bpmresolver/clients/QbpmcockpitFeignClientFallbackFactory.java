@@ -2,16 +2,20 @@ package com.example.spring.bpmresolver.clients;
 
 import com.example.spring.bpmresolver.dto.BpmInstanceDto;
 import com.example.spring.bpmresolver.dto.RestResponsePage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Component
 public class QbpmcockpitFeignClientFallbackFactory implements FallbackFactory<QbpmcockpitFeignClient> {
 
     @Override
     public QbpmcockpitFeignClient create(Throwable cause) {
+        log.error("Failed to extract status from cause: {}", cause.getMessage());
         int status = FeignFallbackUtils.extractStatus(cause);
         String message = FeignFallbackUtils.buildErrorMessage("qbpmcockpitClient", status);
 
