@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="head :: appHead('Instances', '/js/instances.js')"></head>
+<header th:replace="header :: appHeader"></header>
+<body>
+<h2>Экземпляры процессов</h2>
+
+<div th:if="${errorMessage != null}" style="color: #b00020; margin: 8px 0;">
+    <span th:text="${errorMessage}"></span>
+</div>
+
+<form id="instancesFilterForm" th:action="@{/qbpmcockpit/instances}" method="get">
+    <div>
+        <label for="processName">Наименование процесса:</label>
+        <input id="processName" name="processName" type="text" th:value="${processName}" />
+    </div>
+    <div>
+        <label for="state">Статус:</label>
+        <input id="state" name="state" type="text" th:value="${state}" />
+    </div>
+    <div>
+        <label for="serviceName">Сервис:</label>
+        <input id="serviceName" name="serviceName" type="text" th:value="${serviceName}" />
+    </div>
+    <div>
+        <label for="userLogin">Пользователь:</label>
+        <input id="userLogin" name="userLogin" type="text" th:value="${userLogin}" />
+    </div>
+    <div>
+        <label for="lastStartDate">Дата начала:</label>
+        <input id="lastStartDate" name="lastStartDate" type="text" th:value="${lastStartDate}" placeholder="YYYY-MM-DD" />
+    </div>
+    <div>
+        <label for="lastEndDate">Дата завершения:</label>
+        <input id="lastEndDate" name="lastEndDate" type="text" th:value="${lastEndDate}" placeholder="YYYY-MM-DD" />
+    </div>
+    <div>
+        <label for="businessKey">Бизнес-ключ:</label>
+        <input id="businessKey" name="businessKey" type="text" th:value="${businessKey}" />
+    </div>
+    <div>
+        <label for="isRoot">Основной процесс:</label>
+        <select id="isRoot" name="isRoot">
+            <option value="" th:selected="${isRoot == null}">any</option>
+            <option value="true" th:selected="${isRoot != null and isRoot}">true</option>
+            <option value="false" th:selected="${isRoot != null and !isRoot}">false</option>
+        </select>
+    </div>
+    <div>
+        <label for="withOpenIncidents">Инцидент:</label>
+        <select id="withOpenIncidents" name="withOpenIncidents">
+            <option value="" th:selected="${withOpenIncidents == null}">any</option>
+            <option value="true" th:selected="${withOpenIncidents != null and withOpenIncidents}">true</option>
+            <option value="false" th:selected="${withOpenIncidents != null and !withOpenIncidents}">false</option>
+        </select>
+    </div>
+    <div>
+        <label for="tenantId">Тенант:</label>
+        <input id="tenantId" name="tenantId" type="text" th:value="${tenantId}" />
+    </div>
+    <div>
+        <label for="sort">Сортировка:</label>
+        <input id="sort" name="sort" type="text" th:value="${sort}" placeholder="startTime,desc" />
+    </div>
+
+    <div>
+        <label for="size">Эл-ов на странице:</label>
+        <select id="size" name="size">
+            <option value="10" th:selected="${size == 10}">10</option>
+            <option value="20" th:selected="${size == 20}">20</option>
+            <option value="50" th:selected="${size == 50}">50</option>
+            <option value="100" th:selected="${size == 100}">100</option>
+        </select>
+    </div>
+
+    <input id="pageInput" type="hidden" name="page" th:value="${page}" />
+
+    <div>
+        <button type="submit">Поиск</button>
+    </div>
+</form>
+
+<div th:if="${result != null}">
+    <div th:replace="fragments/summary :: resultSummary(${result})"></div>
+
+    <div>
+        <button id="selectAllBtn" type="button">Выбрать все</button>
+    </div>
+
+    <form id="finishForm" th:action="@{/qbpmcockpit/instances/finish}" method="post">
+        <button id="finishBtn" type="submit" disabled>Завершить процессы</button>
+    </form>
+
+    <div th:replace="fragments/pagination :: pagination(${result}, ${pageNumbers}, 'Prev', 'Далее')"></div>
+
+    <table border="1" cellpadding="4" cellspacing="0">
+        <thead>
+        <tr>
+            <th></th>
+            <th>№</th>
+            <th>id</th>
+            <th>processName</th>
+            <th>state</th>
+            <th>serviceName</th>
+            <th>userLogin</th>
+            <th>businessKey</th>
+            <th>startTime</th>
+            <th>endTime</th>
+            <th>duration</th>
+            <th>tenantId</th>
+            <th>withOpenIncidents</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row, rowStat : ${result.content}">
+            <td>
+                <input class="instance-select" type="checkbox" th:attr="data-id=${row.id}" />
+            </td>
+            <td th:text="${(result.number * result.size) + rowStat.index + 1}"></td>
+            <td th:text="${row.id}"></td>
+            <td th:text="${row.processName}"></td>
+            <td th:text="${row.state}"></td>
+            <td th:text="${row.serviceName}"></td>
+            <td th:text="${row.userLogin}"></td>
+            <td th:text="${row.businessKey}"></td>
+            <td th:text="${row.startTime}"></td>
+            <td th:text="${row.endTime}"></td>
+            <td th:text="${row.duration}"></td>
+            <td th:text="${row.tenantId}"></td>
+            <td th:text="${row.withOpenIncidents}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

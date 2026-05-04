@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="head :: appHead('Token', null)"></head>
+<header th:replace="header :: appHeader"></header>
+<body>
+<h2>Настройка токена</h2>
+
+<h3>
+На данной странице вы можете настроить токен, который будет использоваться для доступа к API.
+Возможно установть токен в ручную, введя его в соответствующее поле или автоматически по настраиваемому запросу.
+</h3>
+
+<div th:if="${updated}">Токен обновлен.</div>
+<div th:if="${passwordRequired}">Пароль обязателен для получения токена.</div>
+
+<form th:action="@{/token}" method="post">
+    <div>
+        <label for="token">Текущий токен:</label>
+    </div>
+    <div>
+        <textarea id="token" name="token" rows="10" cols="120" th:text="${token}"></textarea>
+    </div>
+    <div>
+        <button type="submit">Save</button>
+    </div>
+</form>
+
+<h3>Настройка автоматического получения токена</h3>
+
+<form th:action="@{/token/auto}" th:object="${tokenRequest}" method="post">
+    <div>
+        <label for="realm">Realm:</label>
+        <input id="realm" type="text" th:field="*{realm}"/>
+    </div>
+    <div>
+        <label for="clientId">Client ID:</label>
+        <input id="clientId" type="text" th:field="*{clientId}"/>
+    </div>
+    <div>
+        <label for="userName">User name:</label>
+        <input id="userName" type="text" th:field="*{userName}"/>
+    </div>
+    <div>
+        <label for="password">Password:</label>
+        <input id="password" type="password" th:field="*{password}" required/>
+    </div>
+    <div>
+        <label for="url">URL:</label>
+        <input id="url" type="text" th:field="*{url}"/>
+    </div>
+    <div>
+        <button type="submit">Auto update token</button>
+    </div>
+</form>
+</body>
+</html>

@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(pageTitle, scriptSrc, content)">
+<head th:replace="head :: appHead(${pageTitle}, ${scriptSrc})"></head>
+<body>
+<header th:replace="header :: appHeader"></header>
+<main th:replace="${content}"></main>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="head :: appHead('Finish result', null)"></head>
+<header th:replace="header :: appHeader"></header>
+<body>
+<h2>Результат завершения</h2>
+
+
+<div>
+    <a th:href="${backUrl}">Вернуться к поиску процессов</a>
+</div>
+
+<div th:if="${response == null}">
+    <p>Ничего не выбрано.</p>
+</div>
+
+<div th:if="${response != null}">
+    <table border="1" cellpadding="4" cellspacing="0">
+        <thead>
+        <tr>
+            <th>id</th>
+            <th>Статус</th>
+            <th>Сообщение</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${response}">
+            <td th:text="${row.id}"></td>
+            <td th:text="${row.status}"></td>
+            <td th:text="${row.message}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

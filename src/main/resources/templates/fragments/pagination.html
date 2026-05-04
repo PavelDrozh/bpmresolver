@@ -1,0 +1,19 @@
+<div th:fragment="pagination(result, pageNumbers, prevText, nextText)">
+    <button type="button"
+            th:if="${result.hasPrevious()}"
+            th:attr="data-page=${result.number - 1}"
+            th:text="${prevText}">Prev</button>
+
+    <span th:each="p : ${pageNumbers}">
+        <button type="button"
+                th:attr="data-page=${p}"
+                th:text="${p}"
+                th:style="${p} == ${result.number} ? 'font-weight:bold' : ''"></button>
+        <span> </span>
+    </span>
+
+    <button type="button"
+            th:if="${result.hasNext()}"
+            th:attr="data-page=${result.number + 1}"
+            th:text="${nextText}">Next</button>
+</div>

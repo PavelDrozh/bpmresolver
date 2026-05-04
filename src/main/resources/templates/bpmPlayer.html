@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="head :: appHead('Base URL', null)"></head>
+<header th:replace="header :: appHeader"></header>
+<body>
+
+<h2>Настройка БПМ плеера</h2>
+<h3> Пример вводимого service-name (K8s serviceId): qesevaluationsbpm </h3>
+<h3> Пример path/context: qesevaluationsbpm </h3>
+<h3> для возврата исходных значений, заданных по умолчанию - сохранить пустым </h3>
+<form th:action="@{/qbpmplayer/baseUrl}" method="post">
+    <div>
+        <label for="qbpmPlayerServiceName">Service name:</label>
+    </div>
+    <div>
+        <textarea id="qbpmPlayerServiceName" name="serviceName" rows="2" cols="120" th:text="${qbpmPlayerServiceName}"></textarea>
+    </div>
+    <div>
+        <label for="qbpmPlayerContext">Path/Context:</label>
+    </div>
+    <div>
+        <textarea id="qbpmPlayerContext" name="context" rows="2" cols="120" th:text="${qbpmPlayerContext}"></textarea>
+    </div>
+    <div>
+        <button type="submit">Save</button>
+    </div>
+</form>
+</body>
+</html>

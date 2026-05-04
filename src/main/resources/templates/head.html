@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="appHead(pageTitle, scriptSrc)">
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle}">Page</title>
+    <script th:if="${scriptSrc != null}" th:src="@{${scriptSrc}}" defer></script>
+</head>
+</html>

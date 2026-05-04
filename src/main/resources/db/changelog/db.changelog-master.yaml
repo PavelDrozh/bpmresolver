@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-schema
+      author: bpmresolver
+      changes:
+        - sqlFile:
+            path: classpath:schema.sql
+            splitStatements: true
+            stripComments: false
+            endDelimiter: ;
+  - changeSet:
+      id: 002-data
+      author: bpmresolver
+      context: dev
+      preConditions:
+        onFail: MARK_RAN
+        onError: HALT
+      changes:
+        - sqlFile:
+            path: classpath:data.sql
+            splitStatements: true
+            stripComments: false
+            endDelimiter: ;
