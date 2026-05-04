@@ -2,7 +2,10 @@ package com.example.spring.bpmresolver.services.impl;
 
 import com.example.spring.bpmresolver.clients.QbpmcockpitFeignClient;
 import com.example.spring.bpmresolver.dto.BpmInstanceDto;
+import com.example.spring.bpmresolver.dto.QbpmcockpitInstancesRequest;
 import com.example.spring.bpmresolver.dto.RestResponsePage;
+import com.example.spring.bpmresolver.services.BpmFinishedProcessService;
+import com.example.spring.bpmresolver.services.QbpmPlayerService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +25,12 @@ class QbpmcockpitServiceImplTest {
     @Mock
     private QbpmcockpitFeignClient qbpmcockpitClient;
 
+    @Mock
+    private QbpmPlayerService qbpmPlayerService;
+
+    @Mock
+    private BpmFinishedProcessService bpmFinishedProcessService;
+
     @InjectMocks
     private QbpmcockpitServiceImpl service;
 
@@ -38,10 +47,23 @@ class QbpmcockpitServiceImplTest {
                 null, null, null, null, 0, 20
         )).thenReturn(remote);
 
-        RestResponsePage<BpmInstanceDto> result = service.getInstances(
-                null, null, null, null, null, null, null,
-                null, null, null, null, 0, 20
-        );
+        QbpmcockpitInstancesRequest request = QbpmcockpitInstancesRequest.builder()
+                .processName(null)
+                .state(null)
+                .serviceName(null)
+                .userLogin(null)
+                .lastStartDate(null)
+                .lastEndDate(null)
+                .businessKey(null)
+                .isRoot(null)
+                .withOpenIncidents(null)
+                .tenantId(null)
+                .sort(null)
+                .page(0)
+                .size(20)
+                .build();
+
+        RestResponsePage<BpmInstanceDto> result = service.getInstances(request);
 
         assertThat(result.getContent()).hasSize(20);
         assertThat(result.getTotalElements()).isEqualTo(50);

@@ -1,7 +1,7 @@
 package com.example.spring.bpmresolver.config;
 
-import com.example.spring.bpmresolver.locilization.LocalizationService;
-import com.example.spring.bpmresolver.locilization.LocalizationServiceImpl;
+import com.example.spring.bpmresolver.localization.LocalizationService;
+import com.example.spring.bpmresolver.localization.LocalizationServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

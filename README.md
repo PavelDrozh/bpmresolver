@@ -81,6 +81,13 @@ graph TB
   - Query params (все опциональны): `processName`, `state`, `serviceName`, `userLogin`, `lastStartDate`, `lastEndDate`, `businessKey`, `isRoot`, `withOpenIncidents`, `tenantId`, `sort`, `page` (default `0`), `size` (default `20`).
   - **Ответ**: `RestResponsePage<BpmInstanceDto>`.
 
+Пример:
+
+```bash
+curl "http://localhost:7085/api/qbpmcockpit/instances?page=0&size=20" \
+  -H "Authorization: Bearer <token>"
+```
+
 ### REST API: Finished processes
 
 Базовый путь: `/api/finished-processes`.
@@ -88,6 +95,13 @@ graph TB
 - **GET** `/api/finished-processes`
   - Query params: `page` (default `0`), `size` (default `20`).
   - Требует JWT. Данные фильтруются по `jwt.subject()`.
+
+Пример:
+
+```bash
+curl "http://localhost:7085/api/finished-processes?page=0&size=20" \
+  -H "Authorization: Bearer <token>"
+```
 
 - **GET** `/api/finished-processes/search`
   - Query params (опциональны): `processInstanceId`, `status`, `message`, `fromFinishedAt`, `toFinishedAt`, `page`, `size`.
@@ -101,6 +115,15 @@ graph TB
   - **Content-Type**: `application/json`
   - **Body**: `{"ids":[1,2,3]}`
   - **Ответ**: `{"deletedCount":3}`
+
+Пример:
+
+```bash
+curl "http://localhost:7085/api/finished-processes/delete-batch" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"ids":[1,2,3]}'
+```
 
 ### UI страницы
 
@@ -129,15 +152,26 @@ graph TB
 | `SPRING_DATASOURCE_USERNAME` | да | `postgres` | Пользователь БД |
 | `SPRING_DATASOURCE_PASSWORD` | да | `postgres` | Пароль БД |
 | `SPRING_LIQUIBASE_CONTEXTS` | нет | `dev` | Liquibase contexts |
-| `APP_QBPMCOCKPIT_BASE_URL` | нет | `https://qbpmcockpit.qtms.qrun.diasoft.ru` | Базовый URL QBPM Cockpit |
-| `APP_QBPMCOCKPIT_CONTEXT` | нет | `qbpmcockpit` | Контекст (path) QBPM Cockpit |
+| `APP_QBPMCOCKPIT` / `app.qbpmcockpit.service` | нет | `qbpmcockpit` | ID сервиса для Feign-конфига (`spring.cloud.openfeign.client.config.<service>.url`) |
+| `APP_QBPMCOCKPIT_CONTEXT` / `app.qbpmcockpit.context` | нет | `qbpmcockpit` | Контекст (path) QBPM Cockpit |
 | `APP_QBPMCOCKPIT_TOKEN` | зависит от окружения | пусто | Токен для доступа к QBPM Cockpit (если требуется) |
-| `APP_QBPMPLAYER_BASE_URL` | нет | `http://qesevaluationsbpm.qtms.qrun.diasoft.ru` | Базовый URL QBPM Player |
-| `APP_QBPMPLAYER_CONTEXT` | нет | `qesevaluationsbpm` | Контекст (path) QBPM Player |
+| `APP_QBPMPLAYER` / `app.qbpmplayer.service` | нет | `qesevaluationsbpm` | ID сервиса для Feign-конфига (`spring.cloud.openfeign.client.config.<service>.url`) |
+| `APP_QBPMPLAYER_CONTEXT` / `app.qbpmplayer.context` | нет | `qesevaluationsbpm` | Контекст (path) QBPM Player |
+| `app.routing.qbpmcockpit-allowed-service-ids` | нет | `[]` | Список разрешённых service id для маршрутизации QBPM Cockpit |
+| `app.routing.qbpmplayer-allowed-service-ids` | нет | `[]` | Список разрешённых service id для маршрутизации QBPM Player |
 | `APP_AUTH_ACCESS_URL` | нет | `https://login.diasoft.ru/auth/realms/hcm/protocol/openid-connect/token` | URL получения access token (интеграция) |
 | `jwt.access-ttl-seconds` | нет | `600` | TTL access token (сек) |
+| `JWT_PUBLIC_KEY_PEM` / `jwt.public-key-pem` | нет | пусто | Публичный ключ PEM (если задаётся через env) |
+| `JWT_PRIVATE_KEY_PEM` / `jwt.private-key-pem` | нет | пусто | Приватный ключ PEM (если задаётся через env) |
+| `JWT_PUBLIC_KEY_LOCATION` / `jwt.public-key-location` | нет | `classpath:keys/app.pub` | Публичный ключ (classpath/file) |
+| `JWT_PRIVATE_KEY_LOCATION` / `jwt.private-key-location` | нет | `classpath:keys/app.key` | Приватный ключ (classpath/file) |
 | `jwt.public-key-location` | да | `classpath:keys/app.pub` | Публичный ключ для валидации JWT |
 | `jwt.private-key-location` | да | `classpath:keys/app.key` | Приватный ключ для подписи JWT |
+
+Примечание по QBPM URL:
+
+- URL-ы для Feign задаются в `application.yaml` в секции `spring.cloud.openfeign.client.config.*.url`.
+- Ключи `app.qbpmcockpit.service` / `app.qbpmplayer.service` определяют, какой именно блок Feign-конфига использовать.
 
 ## Безопасность и доступ
 
@@ -191,10 +225,26 @@ Actuator endpoints (см. `application.yaml`):
 - `/actuator/health/readiness`
 - `/actuator/info`
 
+Prometheus:
+
+- В зависимостях подключён `micrometer-registry-prometheus`, но по умолчанию наружу опубликованы только `health` и `info`.
+- Чтобы включить Prometheus endpoint, нужно добавить `prometheus` в `management.endpoints.web.exposure.include` и использовать `/actuator/prometheus`.
+
 Кастомные health-индикаторы:
 
 - `UsersHealthIndicator` — проверяет наличие пользователя `admin`.
 - `RolesHealthIndicator` — проверяет наличие ролей `ROLE_ADMIN` и `ROLE_BPM`.
+
+## Схема базы данных и миграции
+
+Liquibase включён (`spring.liquibase.enabled: true`). Основной changelog:
+
+- `src/main/resources/db/changelog/db.changelog-master.yaml`
+
+Он применяет:
+
+- `src/main/resources/schema.sql` (структура)
+- `src/main/resources/data.sql` (данные) — только в контексте `dev`.
 
 ## Решение проблем
 

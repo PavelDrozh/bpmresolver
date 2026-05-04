@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 
 @FeignClient(
-        name = "qbpmcockpitClient",
-        url = "${app.qbpmcockpit.base-url:qbpmcockpit}",
+        name = "${app.qbpmcockpit.service:qbpmcockpit}",
         path = "/${app.qbpmcockpit.context:qbpmcockpit}",
         configuration = QbpmcockpitFeignConfig.class,
         fallbackFactory = QbpmcockpitFeignClientFallbackFactory.class

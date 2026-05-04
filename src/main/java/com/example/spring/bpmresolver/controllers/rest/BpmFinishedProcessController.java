@@ -1,6 +1,7 @@
 package com.example.spring.bpmresolver.controllers.rest;
 
 import com.example.spring.bpmresolver.entities.BpmFinishedProcess;
+import com.example.spring.bpmresolver.localization.LocalizationService;
 import com.example.spring.bpmresolver.services.BpmFinishedProcessService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -10,17 +11,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static com.example.spring.bpmresolver.localization.LocalizationServiceImpl.*;
 
 @RestController
 @RequestMapping("/api/finished-processes")
@@ -28,10 +25,11 @@ import java.util.List;
 public class BpmFinishedProcessController {
 
     private final BpmFinishedProcessService service;
+    private final LocalizationService localizationService;
 
-    private static String requireUser(Jwt jwt) {
+    private String requireUser(Jwt jwt) {
         if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, localizationService.getMessage(AUTH_UNAUTHORIZED));
         }
         return jwt.getSubject();
     }
@@ -75,7 +73,10 @@ public class BpmFinishedProcessController {
     public BpmFinishedProcess getById(@PathVariable("id") Long id, @AuthenticationPrincipal Jwt jwt) {
         String finishedBy = requireUser(jwt);
         return service.findById(id, finishedBy)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "BpmFinishedProcess not found: " + id));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        localizationService.getMessage(BPM_FINISHED_PROCESS_NOT_FOUND_BY_ID, id)
+                ));
     }
 
     @GetMapping(value = "/by-process-instance/{processInstanceId}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -85,7 +86,10 @@ public class BpmFinishedProcessController {
     ) {
         String finishedBy = requireUser(jwt);
         return service.findLatestByProcessInstanceId(processInstanceId, finishedBy)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "BpmFinishedProcess not found for processInstanceId: " + processInstanceId));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        localizationService.getMessage(BPM_FINISHED_PROCESS_NOT_FOUND_BY_PROCESS_INSTANCE_ID, processInstanceId)
+                ));
     }
 
     public record DeleteBatchRequest(List<Long> ids) {}

@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Instances</title>
-</head>
+<head th:replace="head :: appHead('Instances', '/js/instances.js')"></head>
 <header th:replace="header :: appHeader"></header>
 <body>
 <h2>Экземпляры процессов</h2>
@@ -14,35 +11,35 @@
 
 <form id="instancesFilterForm" th:action="@{/qbpmcockpit/instances}" method="get">
     <div>
-        <label for="processName">processName:</label>
+        <label for="processName">Наименование процесса:</label>
         <input id="processName" name="processName" type="text" th:value="${processName}" />
     </div>
     <div>
-        <label for="state">state:</label>
+        <label for="state">Статус:</label>
         <input id="state" name="state" type="text" th:value="${state}" />
     </div>
     <div>
-        <label for="serviceName">serviceName:</label>
+        <label for="serviceName">Сервис:</label>
         <input id="serviceName" name="serviceName" type="text" th:value="${serviceName}" />
     </div>
     <div>
-        <label for="userLogin">userLogin:</label>
+        <label for="userLogin">Пользователь:</label>
         <input id="userLogin" name="userLogin" type="text" th:value="${userLogin}" />
     </div>
     <div>
-        <label for="lastStartDate">lastStartDate:</label>
+        <label for="lastStartDate">Дата начала:</label>
         <input id="lastStartDate" name="lastStartDate" type="text" th:value="${lastStartDate}" placeholder="YYYY-MM-DD" />
     </div>
     <div>
-        <label for="lastEndDate">lastEndDate:</label>
+        <label for="lastEndDate">Дата завершения:</label>
         <input id="lastEndDate" name="lastEndDate" type="text" th:value="${lastEndDate}" placeholder="YYYY-MM-DD" />
     </div>
     <div>
-        <label for="businessKey">businessKey:</label>
+        <label for="businessKey">Бизнес-ключ:</label>
         <input id="businessKey" name="businessKey" type="text" th:value="${businessKey}" />
     </div>
     <div>
-        <label for="isRoot">isRoot:</label>
+        <label for="isRoot">Основной процесс:</label>
         <select id="isRoot" name="isRoot">
             <option value="" th:selected="${isRoot == null}">any</option>
             <option value="true" th:selected="${isRoot != null and isRoot}">true</option>
@@ -50,7 +47,7 @@
         </select>
     </div>
     <div>
-        <label for="withOpenIncidents">withOpenIncidents:</label>
+        <label for="withOpenIncidents">Инцидент:</label>
         <select id="withOpenIncidents" name="withOpenIncidents">
             <option value="" th:selected="${withOpenIncidents == null}">any</option>
             <option value="true" th:selected="${withOpenIncidents != null and withOpenIncidents}">true</option>
@@ -58,16 +55,16 @@
         </select>
     </div>
     <div>
-        <label for="tenantId">tenantId:</label>
+        <label for="tenantId">Тенант:</label>
         <input id="tenantId" name="tenantId" type="text" th:value="${tenantId}" />
     </div>
     <div>
-        <label for="sort">sort:</label>
+        <label for="sort">Сортировка:</label>
         <input id="sort" name="sort" type="text" th:value="${sort}" placeholder="startTime,desc" />
     </div>
 
     <div>
-        <label for="size">size:</label>
+        <label for="size">Эл-ов на странице:</label>
         <select id="size" name="size">
             <option value="10" th:selected="${size == 10}">10</option>
             <option value="20" th:selected="${size == 20}">20</option>
@@ -83,171 +80,8 @@
     </div>
 </form>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var form = document.getElementById('instancesFilterForm');
-        if (!form) {
-            return;
-        }
-
-        function setPageAndSubmit(page) {
-            var pageInput = document.getElementById('pageInput');
-            if (pageInput) {
-                pageInput.value = String(page);
-            }
-            if (typeof form.requestSubmit === 'function') {
-                form.requestSubmit();
-            } else {
-                form.submit();
-            }
-        }
-
-        var pagerButtons = document.querySelectorAll('[data-page]');
-        for (let pagerButton of pagerButtons) {
-            pagerButton.addEventListener('click', function (e) {
-                e.preventDefault();
-                var pageAttr = this.getAttribute('data-page');
-                if (pageAttr === null || pageAttr === undefined) {
-                    return;
-                }
-                var p = Number.parseInt(pageAttr, 10);
-                if (!Number.isNaN(p)) {
-                    setPageAndSubmit(p);
-                }
-            });
-        }
-
-        form.addEventListener('submit', function () {
-            var elements = form.querySelectorAll('input[name], select[name], textarea[name]');
-            for (const element of elements) {
-                var el = element;
-                if (el.name === 'page' || el.name === 'size') {
-                    continue;
-                }
-                var value = (el.value || '').trim();
-                if (value === '') {
-                    el.disabled = true;
-                }
-            }
-        });
-
-        function getRowCheckboxes() {
-            return document.querySelectorAll('input.instance-select[type="checkbox"]');
-        }
-
-        function updateFinishButtonState() {
-            var btn = document.getElementById('finishBtn');
-            if (!btn) {
-                return;
-            }
-            var boxes = getRowCheckboxes();
-            var anyChecked = false;
-            for (const b of boxes) {
-                if (b.checked) {
-                    anyChecked = true;
-                    break;
-                }
-            }
-            btn.disabled = !anyChecked;
-        }
-
-        function updateSelectAllButtonLabel() {
-            var btn = document.getElementById('selectAllBtn');
-            if (!btn) {
-                return;
-            }
-            var boxes = getRowCheckboxes();
-            if (!boxes || boxes.length === 0) {
-                btn.textContent = 'Выбрать все';
-                return;
-            }
-            var allChecked = true;
-            for (const b of boxes) {
-                if (!b.checked) {
-                    allChecked = false;
-                    break;
-                }
-            }
-            btn.textContent = allChecked ? 'Снять выбор' : 'Выбрать все';
-        }
-
-        var selectAllBtn = document.getElementById('selectAllBtn');
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                var boxes = getRowCheckboxes();
-                if (!boxes || boxes.length === 0) {
-                    return;
-                }
-                var shouldCheck = false;
-                for (const b of boxes) {
-                    if (!b.checked) {
-                        shouldCheck = true;
-                        break;
-                    }
-                }
-                for (const b2 of boxes) {
-                    b2.checked = shouldCheck;
-                }
-                updateSelectAllButtonLabel();
-                updateFinishButtonState();
-            });
-        }
-
-        var rowBoxes = getRowCheckboxes();
-        for (const rb of rowBoxes) {
-            rb.addEventListener('change', function () {
-                updateSelectAllButtonLabel();
-                updateFinishButtonState();
-            });
-        }
-
-        var finishForm = document.getElementById('finishForm');
-        if (finishForm) {
-            finishForm.addEventListener('submit', function (e) {
-                var existing = finishForm.querySelectorAll('input[name="id"]');
-                for (const ex of existing) {
-                    ex.remove();
-                }
-
-                var boxes = getRowCheckboxes();
-                var selected = [];
-                for (const b of boxes) {
-                    if (b.checked) {
-                        var id = b.getAttribute('data-id');
-                        if (id) {
-                            selected.push(id);
-                        }
-                    }
-                }
-
-                if (selected.length === 0) {
-                    e.preventDefault();
-                    updateFinishButtonState();
-                    return;
-                }
-
-                for (const idValue of selected) {
-                    var input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'id';
-                    input.value = idValue;
-                    finishForm.appendChild(input);
-                }
-            });
-        }
-
-        updateSelectAllButtonLabel();
-        updateFinishButtonState();
-    });
-</script>
-
 <div th:if="${result != null}">
-    <div>
-        <span th:text="'Всего: ' + ${result.totalElements}"></span>
-        <span th:text="' | Страница: ' + ${result.number} + ' / ' + ${result.totalPages}"></span>
-        <span th:text="' | Эл-ов на странице: ' + ${result.size}"></span>
-    </div>
+    <div th:replace="fragments/summary :: resultSummary(${result})"></div>
 
     <div>
         <button id="selectAllBtn" type="button">Выбрать все</button>
@@ -257,19 +91,7 @@
         <button id="finishBtn" type="submit" disabled>Завершить процессы</button>
     </form>
 
-    <div>
-        <button type="button" th:if="${result.hasPrevious()}" th:attr="data-page=${result.number - 1}">Prev</button>
-
-        <span th:each="p : ${pageNumbers}">
-            <button type="button"
-                    th:attr="data-page=${p}"
-                    th:text="${p}"
-                    th:style="${p} == ${result.number} ? 'font-weight:bold' : ''"></button>
-            <span> </span>
-        </span>
-
-        <button type="button" th:if="${result.hasNext()}" th:attr="data-page=${result.number + 1}">Далее</button>
-    </div>
+    <div th:replace="fragments/pagination :: pagination(${result}, ${pageNumbers}, 'Prev', 'Далее')"></div>
 
     <table border="1" cellpadding="4" cellspacing="0">
         <thead>

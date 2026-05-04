@@ -8,10 +8,13 @@ import com.example.spring.bpmresolver.controllers.view.BpmFinishedProcessViewCon
 import com.example.spring.bpmresolver.controllers.view.QbpmcockpitViewController;
 import com.example.spring.bpmresolver.controllers.view.ResolverTokenController;
 import com.example.spring.bpmresolver.dto.BpmInstanceDto;
+import com.example.spring.bpmresolver.dto.QbpmcockpitInstancesRequest;
 import com.example.spring.bpmresolver.dto.RestResponsePage;
+import com.example.spring.bpmresolver.localization.LocalizationService;
 import com.example.spring.bpmresolver.services.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -33,7 +36,6 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -76,6 +78,9 @@ class ControllerSecurityProtectionTest {
     private JwtTokenService jwtTokenService;
 
     @MockBean
+    private AuthService authService;
+
+    @MockBean
     private com.example.spring.bpmresolver.repositories.RevokedJwtRepository revokedJwtRepository;
 
     @MockBean
@@ -85,10 +90,7 @@ class ControllerSecurityProtectionTest {
     private BpmFinishedProcessService bpmFinishedProcessService;
 
     @MockBean
-    private QbpmcockpitBaseUrlService qbpmcockpitBaseUrlService;
-
-    @MockBean
-    private QbpmPlayerBaseUrlService qbpmPlayerBaseUrlService;
+    private QbpmPlayerServiceNameService qbpmPlayerServiceNameService;
 
     @MockBean
     private QbpmPlayerService qbpmPlayerService;
@@ -97,10 +99,16 @@ class ControllerSecurityProtectionTest {
     private ResolverTokenService resolverTokenService;
 
     @MockBean
+    private ResolverTokenUseCase resolverTokenUseCase;
+
+    @MockBean
     private AccessTokenService accessTokenService;
 
     @MockBean
     private ResolverAccessTokenService resolverAccessTokenService;
+
+    @MockBean
+    private LocalizationService localizationService;
 
     @TestConfiguration
     static class TestKeysConfig {
@@ -132,7 +140,7 @@ class ControllerSecurityProtectionTest {
 
     @Test
     void apiEndpoints_allowJwtAuthentication() throws Exception {
-        when(qbpmcockpitService.getInstances(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+        when(qbpmcockpitService.getInstances(any(QbpmcockpitInstancesRequest.class)))
                 .thenReturn(new RestResponsePage<>(List.of(BpmInstanceDto.builder().id("1").build())));
 
         mockMvc.perform(get("/api/qbpmcockpit/instances")
@@ -188,6 +196,12 @@ class ControllerSecurityProtectionTest {
 
     @Test
     void authLogout_isProtected_requiresAuthentication() throws Exception {
+        when(authService.logout(any())).thenReturn(new AuthService.LogoutResult(
+                302,
+                "/login",
+                ResponseCookie.from(CookieBearerTokenResolver.ACCESS_TOKEN_COOKIE, "").path("/").build()
+        ));
+
         mockMvc.perform(post("/auth/logout"))
                 .andExpect(status().is3xxRedirection());
 

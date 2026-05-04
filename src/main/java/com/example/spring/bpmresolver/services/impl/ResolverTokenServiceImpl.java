@@ -4,6 +4,9 @@ import com.example.spring.bpmresolver.config.QbpmcockpitProperties;
 import com.example.spring.bpmresolver.entities.ResolverTokenUserSetting;
 import com.example.spring.bpmresolver.repositories.ResolverTokenUserSettingRepository;
 import com.example.spring.bpmresolver.services.ResolverTokenService;
+import com.example.spring.bpmresolver.util.DataBaseUtil;
+import com.example.spring.bpmresolver.util.StringUtil;
+import com.example.spring.bpmresolver.util.UsersUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,15 +20,15 @@ public class ResolverTokenServiceImpl implements ResolverTokenService {
 
     public ResolverTokenServiceImpl(QbpmcockpitProperties properties,
                                    ResolverTokenUserSettingRepository tokenUserSettingRepository) {
-        this.token = new AtomicReference<>(ServicesUtil.normalize(properties.getToken()));
+        this.token = new AtomicReference<>(StringUtil.normalize(properties.getToken()));
         this.tokenUserSettingRepository = tokenUserSettingRepository;
     }
 
     @Override
     public String getToken() {
-        String username = ServicesUtil.getCurrentUsernameOrNull();
+        String username = UsersUtil.getCurrentUsernameOrNull();
         if (username != null) {
-            String fromDb = ServicesUtil.getFromDb(
+            String fromDb = DataBaseUtil.getFromDb(
                     tokenUserSettingRepository.findByUsername(username),
                     ResolverTokenUserSetting::getToken
             );
@@ -39,9 +42,9 @@ public class ResolverTokenServiceImpl implements ResolverTokenService {
     @Override
     @Transactional
     public void setToken(String newToken) {
-        String normalized = ServicesUtil.normalize(newToken);
+        String normalized = StringUtil.normalize(newToken);
 
-        String username = ServicesUtil.getCurrentUsernameOrNull();
+        String username = UsersUtil.getCurrentUsernameOrNull();
         if (username == null) {
             token.set(normalized);
             return;

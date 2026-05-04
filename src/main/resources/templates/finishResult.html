@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Finish result</title>
-</head>
+<head th:replace="head :: appHead('Finish result', null)"></head>
 <header th:replace="header :: appHeader"></header>
 <body>
-<h2>Результат завершения процессов</h2>
+<h2>Результат завершения</h2>
+
 
 <div>
     <a th:href="${backUrl}">Вернуться к поиску процессов</a>
@@ -21,8 +19,8 @@
         <thead>
         <tr>
             <th>id</th>
-            <th>status</th>
-            <th>message</th>
+            <th>Статус</th>
+            <th>Сообщение</th>
         </tr>
         </thead>
         <tbody>

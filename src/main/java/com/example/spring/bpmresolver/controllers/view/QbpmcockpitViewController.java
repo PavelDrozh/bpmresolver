@@ -2,15 +2,14 @@ package com.example.spring.bpmresolver.controllers.view;
 
 import com.example.spring.bpmresolver.dto.BpmFinishedProcessResponseDto;
 import com.example.spring.bpmresolver.dto.BpmInstanceDto;
+import com.example.spring.bpmresolver.dto.QbpmcockpitInstancesRequest;
 import com.example.spring.bpmresolver.dto.RestResponsePage;
-import com.example.spring.bpmresolver.services.QbpmcockpitBaseUrlService;
-import com.example.spring.bpmresolver.services.BpmFinishedProcessService;
-import com.example.spring.bpmresolver.services.QbpmPlayerBaseUrlService;
+import com.example.spring.bpmresolver.localization.LocalizationService;
 import com.example.spring.bpmresolver.services.QbpmcockpitService;
-import com.example.spring.bpmresolver.services.QbpmPlayerService;
 
 import java.util.List;
 
+import com.example.spring.bpmresolver.util.ViewUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -22,30 +21,17 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import static com.example.spring.bpmresolver.localization.LocalizationServiceImpl.QBPMCOCKPIT_INSTANCES_ACCESS_DENIED_MESSAGE;
+import static com.example.spring.bpmresolver.util.UsersUtil.getCurrentUsernameOrNull;
+
 @Controller
 @RequestMapping("/qbpmcockpit")
 @AllArgsConstructor
 public class QbpmcockpitViewController {
 
-    private final QbpmcockpitBaseUrlService qbpmcockpitBaseUrlService;
-    private final QbpmPlayerBaseUrlService qbpmPlayerBaseUrlService;
     private final QbpmcockpitService qbpmcockpitService;
-    private final QbpmPlayerService qbpmPlayerService;
-    private final BpmFinishedProcessService bpmFinishedProcessService;
+    private final LocalizationService localizationService;
 
-    @GetMapping("/baseUrl")
-    public String getBaseUrl(Model model) {
-        model.addAttribute("baseUrl", qbpmcockpitBaseUrlService.getBaseUrlOrNull());
-        model.addAttribute("qbpmPlayerBaseUrl", qbpmPlayerBaseUrlService.getBaseUrlOrNull());
-        model.addAttribute("qbpmPlayerContext", qbpmPlayerBaseUrlService.getContextOrNull());
-        return "baseUrl";
-    }
-
-    @PostMapping("/baseUrl")
-    public String setBaseUrl(@RequestParam("baseUrl") String baseUrl) {
-        qbpmcockpitBaseUrlService.setBaseUrl(baseUrl);
-        return "redirect:/qbpmcockpit/baseUrl";
-    }
 
     @GetMapping("/instances")
     public String instances(
@@ -65,29 +51,28 @@ public class QbpmcockpitViewController {
             @RequestParam(value = "error", required = false) String error,
             Model model
     ) {
-        RestResponsePage<BpmInstanceDto> result = qbpmcockpitService.getInstances(
-                processName,
-                state,
-                serviceName,
-                userLogin,
-                lastStartDate,
-                lastEndDate,
-                businessKey,
-                isRoot,
-                withOpenIncidents,
-                tenantId,
-                sort,
-                page,
-                size
-        );
+        RestResponsePage<BpmInstanceDto> result = qbpmcockpitService.getInstances(QbpmcockpitInstancesRequest.builder()
+                .processName(processName)
+                .state(state)
+                .serviceName(serviceName)
+                .userLogin(userLogin)
+                .lastStartDate(lastStartDate)
+                .lastEndDate(lastEndDate)
+                .businessKey(businessKey)
+                .isRoot(isRoot)
+                .withOpenIncidents(withOpenIncidents)
+                .tenantId(tenantId)
+                .sort(sort)
+                .page(page)
+                .size(size)
+                .build());
 
 
 
         model.addAttribute("result", result);
         if ("accessDenied".equals(error)) {
             model.addAttribute("errorMessage",
-                    "Недостаточно прав для выполнения операции \"Завершить процессы\". " +
-                            "Обратитесь к администратору системы для получения прав доступа.");
+                    localizationService.getMessage(QBPMCOCKPIT_INSTANCES_ACCESS_DENIED_MESSAGE));
         }
         model.addAttribute("processName", processName);
         model.addAttribute("state", state);
@@ -117,12 +102,8 @@ public class QbpmcockpitViewController {
         String referer = request.getHeader("Referer");
         String backUrl = (referer != null && !referer.isBlank()) ? referer : "/qbpmcockpit/instances";
 
-        List<BpmFinishedProcessResponseDto> response = null;
-        if (ids != null && !ids.isEmpty()) {
-            response = qbpmPlayerService.deleteInstances(ids);
-            String finishedBy = (jwt == null) ? null : jwt.getSubject();
-            bpmFinishedProcessService.saveFinishResults(response, finishedBy);
-        }
+        String finishedBy = getCurrentUsernameOrNull();
+        List<BpmFinishedProcessResponseDto> response = qbpmcockpitService.finishInstances(ids, finishedBy);
 
         model.addAttribute("response", response);
         model.addAttribute("backUrl", backUrl);

@@ -26,22 +26,37 @@ public class RsaKeyConfig {
 
     @Bean
     RSAPublicKey jwtPublicKey(JwtProperties jwtProperties) throws IOException, GeneralSecurityException {
-        Resource resource = resourceLoader.getResource(jwtProperties.publicKeyLocation());
-        byte[] der = readPem(resource, "PUBLIC KEY");
+        byte[] der;
+        if (jwtProperties.publicKeyPem() != null && !jwtProperties.publicKeyPem().isBlank()) {
+            der = readPem(jwtProperties.publicKeyPem(), "PUBLIC KEY");
+        } else {
+            Resource resource = resourceLoader.getResource(jwtProperties.publicKeyLocation());
+            der = readPem(resource, "PUBLIC KEY");
+        }
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return (RSAPublicKey) kf.generatePublic(new X509EncodedKeySpec(der));
     }
 
     @Bean
     RSAPrivateKey jwtPrivateKey(JwtProperties jwtProperties) throws IOException, GeneralSecurityException {
-        Resource resource = resourceLoader.getResource(jwtProperties.privateKeyLocation());
-        byte[] der = readPem(resource, "PRIVATE KEY");
+        byte[] der;
+        if (jwtProperties.privateKeyPem() != null && !jwtProperties.privateKeyPem().isBlank()) {
+            der = readPem(jwtProperties.privateKeyPem(), "PRIVATE KEY");
+        } else {
+            Resource resource = resourceLoader.getResource(jwtProperties.privateKeyLocation());
+            der = readPem(resource, "PRIVATE KEY");
+        }
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return (RSAPrivateKey) kf.generatePrivate(new PKCS8EncodedKeySpec(der));
     }
 
     private static byte[] readPem(Resource resource, String type) throws IOException {
         String pem = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        return readPem(pem, type);
+    }
+
+    private static byte[] readPem(String pem, String type) {
+        pem = pem.replace("\\n", "\n");
         String header = "-----BEGIN " + type + "-----";
         String footer = "-----END " + type + "-----";
         int start = pem.indexOf(header);

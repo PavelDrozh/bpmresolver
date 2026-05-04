@@ -1,4 +1,4 @@
-package com.example.spring.bpmresolver.controllers.view;
+package com.example.spring.bpmresolver.util;
 
 import org.springframework.data.domain.Page;
 

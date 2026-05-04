@@ -1,37 +1,34 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Удалённые процессы</title>
-</head>
+<head th:replace="head :: appHead('Удалённые процессы', '/js/deletedFinishedProcesses.js')"></head>
 <header th:replace="header :: appHeader"></header>
 <body>
 <h2>Удалённые процессы</h2>
 
 <form id="deletedProcessesFilterForm" th:action="@{/finished-processes/deleted}" method="get">
     <div>
-        <label for="processInstanceId">processInstanceId:</label>
+        <label for="processInstanceId">Идентификатор:</label>
         <input id="processInstanceId" name="processInstanceId" type="text" th:value="${processInstanceId}" />
     </div>
     <div>
-        <label for="status">status:</label>
+        <label for="status">Статус:</label>
         <input id="status" name="status" type="text" th:value="${status}" />
     </div>
     <div>
-        <label for="message">message:</label>
+        <label for="message">Сообщение:</label>
         <input id="message" name="message" type="text" th:value="${message}" />
     </div>
     <div>
-        <label for="fromFinishedAt">fromFinishedAt:</label>
+        <label for="fromFinishedAt">Дата с:</label>
         <input id="fromFinishedAt" name="fromFinishedAt" type="text" th:value="${fromFinishedAt}" placeholder="YYYY-MM-DD" />
     </div>
     <div>
-        <label for="toFinishedAt">toFinishedAt:</label>
+        <label for="toFinishedAt">Дата по:</label>
         <input id="toFinishedAt" name="toFinishedAt" type="text" th:value="${toFinishedAt}" placeholder="YYYY-MM-DD" />
     </div>
 
     <div>
-        <label for="size">size:</label>
+        <label for="size">Эл-ов на странице:</label>
         <select id="size" name="size">
             <option value="10" th:selected="${size == 10}">10</option>
             <option value="20" th:selected="${size == 20}">20</option>
@@ -47,183 +44,8 @@
     </div>
 </form>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var filterForm = document.getElementById('deletedProcessesFilterForm');
-        if (!filterForm) {
-            return;
-        }
-
-        function setPageAndSubmit(page) {
-            var pageInput = document.getElementById('pageInput');
-            if (pageInput) {
-                pageInput.value = String(page);
-            }
-            if (typeof filterForm.requestSubmit === 'function') {
-                filterForm.requestSubmit();
-            } else {
-                filterForm.submit();
-            }
-        }
-
-        var pagerButtons = document.querySelectorAll('[data-page]');
-        for (let pagerButton of pagerButtons) {
-            pagerButton.addEventListener('click', function (e) {
-                e.preventDefault();
-                var pageAttr = this.getAttribute('data-page');
-                if (pageAttr === null || pageAttr === undefined) {
-                    return;
-                }
-                var p = Number.parseInt(pageAttr, 10);
-                if (!Number.isNaN(p)) {
-                    setPageAndSubmit(p);
-                }
-            });
-        }
-
-        filterForm.addEventListener('submit', function () {
-            var elements = filterForm.querySelectorAll('input[name], select[name], textarea[name]');
-            for (const element of elements) {
-                var el = element;
-                if (el.name === 'page' || el.name === 'size') {
-                    continue;
-                }
-                var value = (el.value || '').trim();
-                if (value === '') {
-                    el.disabled = true;
-                }
-            }
-        });
-
-        function getRowCheckboxes() {
-            return document.querySelectorAll('input.proc-select[type="checkbox"]');
-        }
-
-        function updateDeleteButtonState() {
-            var btn = document.getElementById('deleteBtn');
-            if (!btn) {
-                return;
-            }
-            var boxes = getRowCheckboxes();
-            var anyChecked = false;
-            for (const b of boxes) {
-                if (b.checked) {
-                    anyChecked = true;
-                    break;
-                }
-            }
-            btn.disabled = !anyChecked;
-        }
-
-        function updateSelectAllButtonLabel() {
-            var btn = document.getElementById('selectAllBtn');
-            if (!btn) {
-                return;
-            }
-            var boxes = getRowCheckboxes();
-            if (!boxes || boxes.length === 0) {
-                btn.textContent = 'Выбрать все';
-                return;
-            }
-            var allChecked = true;
-            for (const b of boxes) {
-                if (!b.checked) {
-                    allChecked = false;
-                    break;
-                }
-            }
-            btn.textContent = allChecked ? 'Снять выбор' : 'Выбрать все';
-        }
-
-        var selectAllBtn = document.getElementById('selectAllBtn');
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                var boxes = getRowCheckboxes();
-                if (!boxes || boxes.length === 0) {
-                    return;
-                }
-                var shouldCheck = false;
-                for (const b of boxes) {
-                    if (!b.checked) {
-                        shouldCheck = true;
-                        break;
-                    }
-                }
-                for (const b2 of boxes) {
-                    b2.checked = shouldCheck;
-                }
-                updateSelectAllButtonLabel();
-                updateDeleteButtonState();
-            });
-        }
-
-        var rowBoxes = getRowCheckboxes();
-        for (const rb of rowBoxes) {
-            rb.addEventListener('change', function () {
-                updateSelectAllButtonLabel();
-                updateDeleteButtonState();
-            });
-        }
-
-        var deleteForm = document.getElementById('deleteForm');
-        if (deleteForm) {
-            deleteForm.addEventListener('submit', async function (e) {
-                e.preventDefault();
-
-                var boxes = getRowCheckboxes();
-                var selected = [];
-                for (const b of boxes) {
-                    if (b.checked) {
-                        var id = b.getAttribute('data-id');
-                        if (id) {
-                            var n = Number.parseInt(id, 10);
-                            if (!Number.isNaN(n)) {
-                                selected.push(n);
-                            }
-                        }
-                    }
-                }
-
-                if (selected.length === 0) {
-                    updateDeleteButtonState();
-                    return;
-                }
-
-                var confirmText = 'Удалить выбранные записи (' + selected.length + ')?';
-                if (!window.confirm(confirmText)) {
-                    return;
-                }
-
-                var res = await fetch('/api/finished-processes/delete-batch', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ ids: selected })
-                });
-
-                if (!res.ok) {
-                    alert('Ошибка удаления: HTTP ' + res.status);
-                    return;
-                }
-
-                // перезагружаем страницу с текущими фильтрами
-                window.location.reload();
-            });
-        }
-
-        updateSelectAllButtonLabel();
-        updateDeleteButtonState();
-    });
-</script>
-
 <div th:if="${result != null}">
-    <div>
-        <span th:text="'Всего: ' + ${result.totalElements}"></span>
-        <span th:text="' | Страница: ' + ${result.number} + ' / ' + ${result.totalPages}"></span>
-        <span th:text="' | Эл-ов на странице: ' + ${result.size}"></span>
-    </div>
+    <div th:replace="fragments/summary :: resultSummary(${result})"></div>
 
     <div>
         <button id="selectAllBtn" type="button">Выбрать все</button>
@@ -233,19 +55,7 @@
         <button id="deleteBtn" type="submit" disabled>Удалить записи</button>
     </form>
 
-    <div>
-        <button type="button" th:if="${result.hasPrevious()}" th:attr="data-page=${result.number - 1}">Prev</button>
-
-        <span th:each="p : ${pageNumbers}">
-            <button type="button"
-                    th:attr="data-page=${p}"
-                    th:text="${p}"
-                    th:style="${p} == ${result.number} ? 'font-weight:bold' : ''"></button>
-            <span> </span>
-        </span>
-
-        <button type="button" th:if="${result.hasNext()}" th:attr="data-page=${result.number + 1}">Next</button>
-    </div>
+    <div th:replace="fragments/pagination :: pagination(${result}, ${pageNumbers}, 'Prev', 'Next')"></div>
 
     <table border="1" cellpadding="4" cellspacing="0">
         <thead>
@@ -253,11 +63,11 @@
             <th></th>
             <th>№</th>
             <th>id</th>
-            <th>processInstanceId</th>
-            <th>finishedBy</th>
-            <th>status</th>
-            <th>message</th>
-            <th>finishedAt</th>
+            <th>Идентификатор процесса</th>
+            <th>Завершен</th>
+            <th>Статус</th>
+            <th>Сообщение</th>
+            <th>Дата завершения</th>
         </tr>
         </thead>
         <tbody>

@@ -15,7 +15,21 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-test.yaml
     contexts: ${SPRING_LIQUIBASE_CONTEXTS:dev}
-
+  cloud:
+    openfeign:
+      client:
+        config:
+          qesevaluationsbpm:
+            url: http://qesevaluationsbpm.qtms.qrun.diasoft.ru
+          qbpmcockpit:
+            url: https://qbpmcockpit.qtms.qrun.diasoft.ru
   jpa:
     hibernate:
       ddl-auto: none
+jwt:
+  issuer: bpmresolver
+  access-ttl-seconds: 600
+  public-key-pem: ${JWT_PUBLIC_KEY_PEM:}
+  private-key-pem: ${JWT_PRIVATE_KEY_PEM:}
+  public-key-location: ${JWT_PUBLIC_KEY_LOCATION:classpath:keys/app.pub}
+  private-key-location: ${JWT_PRIVATE_KEY_LOCATION:classpath:keys/app.key}

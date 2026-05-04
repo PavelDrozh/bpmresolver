@@ -10,7 +10,7 @@ import java.util.Objects;
 @ConfigurationProperties(prefix = "app.qbpmplayer")
 @AllArgsConstructor
 public final class QbpmPlayerProperties {
-    private final String baseUrl;
+    private final String service;
     private final String context;
 
     @Override
@@ -18,19 +18,19 @@ public final class QbpmPlayerProperties {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (QbpmPlayerProperties) obj;
-        return Objects.equals(this.baseUrl, that.baseUrl) &&
+        return Objects.equals(this.service, that.service) &&
                 Objects.equals(this.context, that.context);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(baseUrl, context);
+        return Objects.hash(service, context);
     }
 
     @Override
     public String toString() {
         return "QbpmPlayerProperties[" +
-                "baseUrl=" + baseUrl + ", " +
+                "service=" + service + ", " +
                 "context=" + context + ']';
     }
 }

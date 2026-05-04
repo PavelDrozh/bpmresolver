@@ -2,6 +2,8 @@ package com.example.spring.bpmresolver.controllers.view;
 
 import com.example.spring.bpmresolver.entities.BpmFinishedProcess;
 import com.example.spring.bpmresolver.services.BpmFinishedProcessService;
+import com.example.spring.bpmresolver.util.ViewParamUtil;
+import com.example.spring.bpmresolver.util.ViewUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,10 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 
 @Controller
 @RequestMapping("/finished-processes")
@@ -40,15 +39,15 @@ public class BpmFinishedProcessViewController {
     ) {
         String finishedBy = (jwt == null) ? null : jwt.getSubject();
 
-        LocalDateTime from = parseDateStart(fromFinishedAt);
-        LocalDateTime to = parseDateEnd(toFinishedAt);
+        LocalDateTime from = ViewParamUtil.parseDateStart(fromFinishedAt);
+        LocalDateTime to = ViewParamUtil.parseDateEnd(toFinishedAt);
 
         Pageable pageable = PageRequest.of(page, size);
         Page<BpmFinishedProcess> result = service.search(
                 finishedBy,
-                blankToNull(processInstanceId),
-                blankToNull(status),
-                blankToNull(message),
+                ViewParamUtil.blankToNull(processInstanceId),
+                ViewParamUtil.blankToNull(status),
+                ViewParamUtil.blankToNull(message),
                 from,
                 to,
                 pageable
@@ -66,39 +65,5 @@ public class BpmFinishedProcessViewController {
         model.addAttribute("pageNumbers", ViewUtil.getPageNumbers(result, page));
 
         return "deletedFinishedProcesses";
-    }
-
-    private static String blankToNull(String s) {
-        if (s == null) {
-            return null;
-        }
-        String t = s.trim();
-        return t.isEmpty() ? null : t;
-    }
-
-    private static LocalDateTime parseDateStart(String s) {
-        String t = blankToNull(s);
-        if (t == null) {
-            return null;
-        }
-        try {
-            LocalDate d = LocalDate.parse(t);
-            return d.atStartOfDay();
-        } catch (DateTimeParseException e) {
-            return null;
-        }
-    }
-
-    private static LocalDateTime parseDateEnd(String s) {
-        String t = blankToNull(s);
-        if (t == null) {
-            return null;
-        }
-        try {
-            LocalDate d = LocalDate.parse(t);
-            return d.atTime(LocalTime.MAX);
-        } catch (DateTimeParseException e) {
-            return null;
-        }
     }
 }

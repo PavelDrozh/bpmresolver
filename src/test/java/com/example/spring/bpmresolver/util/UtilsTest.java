@@ -1,4 +1,4 @@
-package com.example.spring.bpmresolver.services.impl;
+package com.example.spring.bpmresolver.util;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -10,7 +10,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ServicesUtilTest {
+class UtilsTest {
 
     @AfterEach
     void tearDown() {
@@ -19,34 +19,34 @@ class ServicesUtilTest {
 
     @Test
     void isBlank() {
-        assertThat(ServicesUtil.isBlank(null)).isTrue();
-        assertThat(ServicesUtil.isBlank("")).isTrue();
-        assertThat(ServicesUtil.isBlank("   ")).isTrue();
-        assertThat(ServicesUtil.isBlank("a")).isFalse();
+        assertThat(StringUtil.isBlank(null)).isTrue();
+        assertThat(StringUtil.isBlank("")).isTrue();
+        assertThat(StringUtil.isBlank("   ")).isTrue();
+        assertThat(StringUtil.isBlank("a")).isFalse();
     }
 
     @Test
     void normalize() {
-        assertThat(ServicesUtil.normalize(null)).isNull();
-        assertThat(ServicesUtil.normalize("  ")).isNull();
-        assertThat(ServicesUtil.normalize(" a ")).isEqualTo("a");
+        assertThat(StringUtil.normalize(null)).isNull();
+        assertThat(StringUtil.normalize("  ")).isNull();
+        assertThat(StringUtil.normalize(" a ")).isEqualTo("a");
     }
 
     @Test
     void getFromDb_emptyOptional_returnsNull() {
-        assertThat(ServicesUtil.getFromDb(Optional.empty(), Object::toString)).isNull();
+        assertThat(DataBaseUtil.getFromDb(Optional.empty(), Object::toString)).isNull();
     }
 
     @Test
     void getFromDb_normalizesValue() {
         record R(String value) {}
-        assertThat(ServicesUtil.getFromDb(Optional.of(new R("  x  ")), R::value)).isEqualTo("x");
-        assertThat(ServicesUtil.getFromDb(Optional.of(new R("   ")), R::value)).isNull();
+        assertThat(DataBaseUtil.getFromDb(Optional.of(new R("  x  ")), R::value)).isEqualTo("x");
+        assertThat(DataBaseUtil.getFromDb(Optional.of(new R("   ")), R::value)).isNull();
     }
 
     @Test
     void getCurrentUsernameOrNull_whenNoAuthentication_returnsNull() {
-        assertThat(ServicesUtil.getCurrentUsernameOrNull()).isNull();
+        assertThat(UsersUtil.getCurrentUsernameOrNull()).isNull();
     }
 
     @Test
@@ -54,7 +54,7 @@ class ServicesUtilTest {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken("john", "n/a");
         authentication.setAuthenticated(true);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        assertThat(ServicesUtil.getCurrentUsernameOrNull()).isEqualTo("john");
+        assertThat(UsersUtil.getCurrentUsernameOrNull()).isEqualTo("john");
     }
 
     @Test
@@ -67,7 +67,7 @@ class ServicesUtilTest {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken(jwt, "n/a");
         authentication.setAuthenticated(true);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        assertThat(ServicesUtil.getCurrentUsernameOrNull()).isEqualTo("subj");
+        assertThat(UsersUtil.getCurrentUsernameOrNull()).isEqualTo("subj");
     }
 
     @Test
@@ -75,6 +75,6 @@ class ServicesUtilTest {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken("anonymousUser", "n/a");
         authentication.setAuthenticated(true);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        assertThat(ServicesUtil.getCurrentUsernameOrNull()).isNull();
+        assertThat(UsersUtil.getCurrentUsernameOrNull()).isNull();
     }
 }

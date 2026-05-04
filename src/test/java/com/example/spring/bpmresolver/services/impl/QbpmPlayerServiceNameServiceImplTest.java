@@ -1,5 +1,6 @@
 package com.example.spring.bpmresolver.services.impl;
 
+import com.example.spring.bpmresolver.clients.ServiceIdValidator;
 import com.example.spring.bpmresolver.config.QbpmPlayerProperties;
 import com.example.spring.bpmresolver.entities.QbpmplayerUserSetting;
 import com.example.spring.bpmresolver.repositories.QbpmplayerUserSettingRepository;
@@ -20,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class QbpmPlayerBaseUrlServiceImplTest {
+class QbpmPlayerServiceNameServiceImplTest {
 
     @Mock
     private QbpmplayerUserSettingRepository userSettingRepository;
@@ -28,8 +29,11 @@ class QbpmPlayerBaseUrlServiceImplTest {
     @Mock
     private QbpmPlayerProperties properties;
 
+    @Mock
+    private ServiceIdValidator serviceIdValidator;
+
     @InjectMocks
-    private QbpmPlayerBaseUrlServiceImpl service;
+    private QbpmPlayerServiceNameServiceImpl service;
 
     @Captor
     private ArgumentCaptor<QbpmplayerUserSetting> settingCaptor;
@@ -40,7 +44,7 @@ class QbpmPlayerBaseUrlServiceImplTest {
     }
 
     @Test
-    void getBaseUrlOrNull_whenUserHasValueInDb_returnsDbValue() {
+    void getServiceNameOrNull_whenUserHasValueInDb_returnsDbValue() {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken("john", "n/a");
         authentication.setAuthenticated(true);
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -48,19 +52,19 @@ class QbpmPlayerBaseUrlServiceImplTest {
                 QbpmplayerUserSetting.builder().username("john").baseUrl("  http://db  ").build()
         ));
 
-        assertThat(service.getBaseUrlOrNull()).isEqualTo("http://db");
+        assertThat(service.getServiceNameOrNull()).isEqualTo("http://db");
         verifyNoInteractions(properties);
     }
 
     @Test
-    void getBaseUrlOrNull_whenNoDbValue_usesDefaultAndNormalizesBlankToNull() {
+    void getServiceNameOrNull_whenNoDbValue_usesDefaultAndNormalizesBlankToNull() {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken("john", "n/a");
         authentication.setAuthenticated(true);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         when(userSettingRepository.findByUsername("john")).thenReturn(Optional.empty());
-        when(properties.getBaseUrl()).thenReturn("   ");
+        when(properties.getService()).thenReturn("   ");
 
-        assertThat(service.getBaseUrlOrNull()).isNull();
+        assertThat(service.getServiceNameOrNull()).isNull();
     }
 
     @Test
@@ -71,13 +75,13 @@ class QbpmPlayerBaseUrlServiceImplTest {
     }
 
     @Test
-    void setBaseUrl_whenNoAuth_doesNothing() {
-        service.setBaseUrl("http://x");
+    void setServiceName_whenNoAuth_doesNothing() {
+        service.setServiceName("http://x");
         verifyNoInteractions(userSettingRepository);
     }
 
     @Test
-    void setBaseUrl_whenBothBaseUrlAndContextBlank_deletesByUsername() {
+    void setBaseUrl_whenBothServiceNameAndContextBlank_deletesByUsername() {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken("john", "n/a");
         authentication.setAuthenticated(true);
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -85,7 +89,7 @@ class QbpmPlayerBaseUrlServiceImplTest {
                 QbpmplayerUserSetting.builder().username("john").baseUrl(null).context(null).build()
         ));
 
-        service.setBaseUrl("   ");
+        service.setServiceName("   ");
 
         verify(userSettingRepository).deleteByUsername("john");
         verify(userSettingRepository, never()).save(any());
@@ -97,6 +101,8 @@ class QbpmPlayerBaseUrlServiceImplTest {
         authentication.setAuthenticated(true);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         when(userSettingRepository.findByUsername("john")).thenReturn(Optional.empty());
+
+        when(serviceIdValidator.validateContextOrThrow("/ctx")).thenReturn("/ctx");
 
         service.setContext("  /ctx ");
 

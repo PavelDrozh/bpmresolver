@@ -17,7 +17,7 @@ spring:
         enabled: true
     circuitbreaker:
       resilience4j:
-        disable-time-limiter: true
+        ##disable-time-limiter: true
         disable-thread-pool: true
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres?currentSchema=bpmresolver}
@@ -35,12 +35,15 @@ spring:
       basePath: /datarest
 app:
   qbpmcockpit:
-    base-url: ${APP_QBPMCOCKPIT_BASE_URL:https://qbpmcockpit.qtms.qrun.diasoft.ru}
+    service: ${APP_QBPMCOCKPIT:qbpmcockpit}
     context: ${APP_QBPMCOCKPIT_CONTEXT:qbpmcockpit}
     token: ${APP_QBPMCOCKPIT_TOKEN:}
   qbpmplayer:
-    base-url: ${APP_QBPMPLAYER_BASE_URL:http://qesevaluationsbpm.qtms.qrun.diasoft.ru}
+    service: ${APP_QBPMPLAYER:qesevaluationsbpm}
     context: ${APP_QBPMPLAYER_CONTEXT:qesevaluationsbpm}
+  routing:
+    qbpmcockpit-allowed-service-ids: []
+    qbpmplayer-allowed-service-ids: []
   auth:
     access:
       url: ${APP_AUTH_ACCESS_URL:https://login.diasoft.ru/auth/realms/hcm/protocol/openid-connect/token}
@@ -51,8 +54,10 @@ app:
 jwt:
   issuer: bpmresolver
   access-ttl-seconds: 600
-  public-key-location: classpath:keys/app.pub
-  private-key-location: classpath:keys/app.key
+  public-key-pem: ${JWT_PUBLIC_KEY_PEM:}
+  private-key-pem: ${JWT_PRIVATE_KEY_PEM:}
+  public-key-location: ${JWT_PUBLIC_KEY_LOCATION:}
+  private-key-location: ${JWT_PRIVATE_KEY_LOCATION:}
 management:
   endpoints:
     web:
@@ -78,4 +83,4 @@ resilience4j:
     configs:
       default:
         timeout-duration: 20s
-        cancel-running-future: true
+        ##cancel-running-future: true

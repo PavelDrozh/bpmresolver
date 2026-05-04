@@ -1,0 +1,5 @@
+<div th:fragment="resultSummary(result)">
+    <span th:text="'Всего: ' + ${result.totalElements}"></span>
+    <span th:text="' | Страница: ' + ${result.number} + ' / ' + ${result.totalPages}"></span>
+    <span th:text="' | Эл-ов на странице: ' + ${result.size}"></span>
+</div>

@@ -5,6 +5,9 @@ import com.example.spring.bpmresolver.dto.TokenRequestDto;
 import com.example.spring.bpmresolver.entities.ResolverAccessUserSetting;
 import com.example.spring.bpmresolver.repositories.ResolverAccessUserSettingRepository;
 import com.example.spring.bpmresolver.services.ResolverAccessTokenService;
+import com.example.spring.bpmresolver.util.DataBaseUtil;
+import com.example.spring.bpmresolver.util.StringUtil;
+import com.example.spring.bpmresolver.util.UsersUtil;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,9 +27,9 @@ public class ResolverAccessTokenServiceImpl implements ResolverAccessTokenServic
 
     @Override
     public String getUrl() {
-        String username = ServicesUtil.getCurrentUsernameOrNull();
+        String username = UsersUtil.getCurrentUsernameOrNull();
         if (username != null) {
-            String fromDb = ServicesUtil.getFromDb(
+            String fromDb = DataBaseUtil.getFromDb(
                     userSettingRepository.findByUsername(username),
                     ResolverAccessUserSetting::getUrl
             );
@@ -35,14 +38,14 @@ public class ResolverAccessTokenServiceImpl implements ResolverAccessTokenServic
             }
         }
 
-        return ServicesUtil.normalize(properties.getUrl());
+        return StringUtil.normalize(properties.getUrl());
     }
 
     @Override
     public String getClientId() {
-        String username = ServicesUtil.getCurrentUsernameOrNull();
+        String username = UsersUtil.getCurrentUsernameOrNull();
         if (username != null) {
-            String fromDb = ServicesUtil.getFromDb(
+            String fromDb = DataBaseUtil.getFromDb(
                     userSettingRepository.findByUsername(username),
                     ResolverAccessUserSetting::getClientId
             );
@@ -51,14 +54,14 @@ public class ResolverAccessTokenServiceImpl implements ResolverAccessTokenServic
             }
         }
 
-        return ServicesUtil.normalize(properties.getClientId());
+        return StringUtil.normalize(properties.getClientId());
     }
 
     @Override
     public String getUserName() {
-        String username = ServicesUtil.getCurrentUsernameOrNull();
+        String username = UsersUtil.getCurrentUsernameOrNull();
         if (username != null) {
-            String fromDb = ServicesUtil.getFromDb(
+            String fromDb = DataBaseUtil.getFromDb(
                     userSettingRepository.findByUsername(username),
                     ResolverAccessUserSetting::getAccessUser
             );
@@ -67,14 +70,14 @@ public class ResolverAccessTokenServiceImpl implements ResolverAccessTokenServic
             }
         }
 
-        return ServicesUtil.normalize(properties.getUserName());
+        return StringUtil.normalize(properties.getUserName());
     }
 
     @Override
     public String getRealm() {
-        String username = ServicesUtil.getCurrentUsernameOrNull();
+        String username = UsersUtil.getCurrentUsernameOrNull();
         if (username != null) {
-            String fromDb = ServicesUtil.getFromDb(
+            String fromDb = DataBaseUtil.getFromDb(
                     userSettingRepository.findByUsername(username),
                     ResolverAccessUserSetting::getRealm
             );
@@ -83,7 +86,7 @@ public class ResolverAccessTokenServiceImpl implements ResolverAccessTokenServic
             }
         }
 
-        return ServicesUtil.normalize(properties.getRealm());
+        return StringUtil.normalize(properties.getRealm());
     }
 
     @Override
@@ -93,7 +96,7 @@ public class ResolverAccessTokenServiceImpl implements ResolverAccessTokenServic
             return;
         }
 
-        String username = ServicesUtil.getCurrentUsernameOrNull();
+        String username = UsersUtil.getCurrentUsernameOrNull();
         if (username == null) {
             return;
         }
@@ -101,15 +104,15 @@ public class ResolverAccessTokenServiceImpl implements ResolverAccessTokenServic
         ResolverAccessUserSetting setting = userSettingRepository.findByUsername(username)
                 .orElseGet(() -> ResolverAccessUserSetting.builder().username(username).build());
 
-        setting.setRealm(ServicesUtil.normalize(settings.getRealm()));
-        setting.setClientId(ServicesUtil.normalize(settings.getClientId()));
-        setting.setAccessUser(ServicesUtil.normalize(settings.getUserName()));
-        setting.setUrl(ServicesUtil.normalize(settings.getUrl()));
+        setting.setRealm(StringUtil.normalize(settings.getRealm()));
+        setting.setClientId(StringUtil.normalize(settings.getClientId()));
+        setting.setAccessUser(StringUtil.normalize(settings.getUserName()));
+        setting.setUrl(StringUtil.normalize(settings.getUrl()));
 
-        if (ServicesUtil.isBlank(setting.getRealm())
-                && ServicesUtil.isBlank(setting.getClientId())
-                && ServicesUtil.isBlank(setting.getAccessUser())
-                && ServicesUtil.isBlank(setting.getUrl())) {
+        if (StringUtil.isBlank(setting.getRealm())
+                && StringUtil.isBlank(setting.getClientId())
+                && StringUtil.isBlank(setting.getAccessUser())
+                && StringUtil.isBlank(setting.getUrl())) {
             userSettingRepository.deleteByUsername(username);
             return;
         }
